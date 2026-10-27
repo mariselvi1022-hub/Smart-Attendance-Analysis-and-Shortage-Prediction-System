@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Admin Dashboard</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<style>
+
+body{
+    background:#f4f7fc;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+.sidebar{
+    min-height:100vh;
+    background:#dc3545;
+    color:white;
+    padding-top:20px;
+}
+
+.sidebar h3{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.sidebar a{
+    display:block;
+    color:white;
+    text-decoration:none;
+    padding:12px 20px;
+    margin:5px 10px;
+    border-radius:8px;
+    transition:.3s;
+}
+
+.sidebar a:hover{
+    background:rgba(255,255,255,.2);
+}
+
+.sidebar .active{
+    background:white;
+    color:#dc3545;
+    font-weight:bold;
+}
+
+.content{
+    padding:30px;
+}
+
+.card{
+    border:none;
+    border-radius:15px;
+    transition:.3s;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+}
+
+.card i{
+    font-size:40px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container-fluid">
+
+<div class="row">
+
+<!-- Sidebar -->
+
+<div class="col-md-3 col-lg-2 sidebar">
+
+<h3>
+<i class="bi bi-shield-lock-fill"></i>
+Admin
+</h3>
+
+<a href="{{ url_for('admin.admin_dashboard') }}" class="active">
+<i class="bi bi-speedometer2"></i>
+Dashboard
+</a>
+
+<a href="{{ url_for('admin.student_management') }}">
+<i class="bi bi-people-fill"></i>
+Manage Students
+</a>
+
+<a href="{{ url_for('admin.faculty_management') }}">
+<i class="bi bi-person-badge-fill"></i>
+Manage Faculty
+</a>
+
+<a href="{{ url_for('admin.subject_management') }}">
+<i class="bi bi-book-fill"></i>
+Manage Subjects
+</a>
+
+<a href="#">
+<i class="bi bi-building"></i>
+Manage Departments
+</a>
+
+<a href="{{ url_for('auth.view_ai_alert_logs') }}">
+<i class="bi bi-envelope-check-fill"></i>
+AI Alert Logs
+</a>
+
+<a href="{{ url_for('auth.attendance_reports') }}">
+<i class="bi bi-calendar-check-fill"></i>
+Attendance Reports
+</a>
+
+<a href="{{ url_for('auth.admin_analytics') }}">
+    <i class="bi bi-bar-chart-fill"></i>
+    Analytics
+</a>
+
+<a href="{{ url_for('admin.admin_logout') }}">
+<i class="bi bi-box-arrow-right"></i>
+Logout
+</a>
+
+</div>
+
+<!-- Main Content -->
+
+<div class="col-md-9 col-lg-10 content">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+<div>
+<h2>Administrator Dashboard</h2>
+<p class="text-muted">Welcome, <strong>{{ admin_name }}</strong></p>
+</div>
+
+<div class="d-flex gap-2">
+    <!-- Renamed to Alert Logs as requested -->
+    <a href="{{ url_for('auth.view_ai_alert_logs') }}" class="btn btn-warning fw-bold">
+        <i class="bi bi-envelope-check-fill me-1"></i> Alert Logs
+    </a>
+    <a href="/" class="btn btn-outline-secondary">
+        <i class="bi bi-house"></i> Home
+    </a>
+</div>
+
+</div>
+
+<!-- Statistics -->
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="bi bi-mortarboard-fill text-primary"></i>
+                <h5 class="mt-3">Students</h5>
+                <h2>{{ student_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="bi bi-person-workspace text-success"></i>
+                <h5 class="mt-3">Faculty</h5>
+                <h2>{{ faculty_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="bi bi-book-half text-warning"></i>
+                <h5 class="mt-3">Subjects</h5>
+                <h2>{{ subject_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="bi bi-building text-danger"></i>
+                <h5 class="mt-3">Departments</h5>
+                <h2>{{ dept_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Quick Actions -->
+
+<div class="card shadow mt-5">
+
+<div class="card-header bg-danger text-white fw-bold">
+Quick Actions
+</div>
+
+<div class="card-body">
+
+<div class="row text-center g-3">
+
+<div class="col-md-3">
+<a href="{{ url_for('admin.student_management') }}" class="btn btn-primary w-100 py-3">
+<i class="bi bi-person-plus-fill"></i><br><br>
+Manage Students
+</a>
+</div>
+
+<div class="col-md-3">
+<a href="{{ url_for('admin.faculty_management') }}" class="btn btn-success w-100 py-3">
+<i class="bi bi-person-badge-fill"></i><br><br>
+Add Faculty
+</a>
+</div>
+
+<div class="col-md-3">
+<a href="{{ url_for('admin.subject_management') }}" class="btn btn-warning w-100 py-3">
+<i class="bi bi-book-fill"></i><br><br>
+Manage Subjects
+</a>
+</div>
+
+<!-- Replaced circled card with working Generate Report button -->
+<div class="col-md-3">
+<a href="{{ url_for('auth.attendance_reports') }}" class="btn btn-danger w-100 py-3">
+<i class="bi bi-file-earmark-bar-graph-fill"></i><br><br>
+Generate Report
+</a>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

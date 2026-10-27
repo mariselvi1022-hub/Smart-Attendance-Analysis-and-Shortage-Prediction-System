@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management - Smart Attendance System</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .page-header {
+            font-weight: 700;
+            color: #212529;
+        }
+        .card-custom {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .form-label {
+            font-weight: 500;
+            font-size: 13px;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+        .table thead th {
+            background-color: #198754;
+            color: white;
+            vertical-align: middle;
+        }
+        .table tbody td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+
+    <!-- Title -->
+    <h3 class="page-header mb-4">
+        <i class="bi bi-people-fill text-primary"></i> Student Management
+    </h3>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Add New Student Card -->
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-primary text-white py-2">
+            <h6 class="mb-0 fw-bold">Add New Student</h6>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('auth.student_management') }}">
+
+                <!-- Row 1: Register Number & Full Name -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Register Number</label>
+                        <input type="text" name="register_number" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="full_name" class="form-control" required>
+                    </div>
+                </div>
+
+                <!-- Row 2: Email & Phone -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" name="phone" class="form-control" required>
+                    </div>
+                </div>
+
+                <!-- Row 3: Department, Semester, Section -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Department</label>
+                        <select name="department_id" class="form-select" required>
+                            <option value="" disabled selected>-- Select Department --</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept.department_id }}">{{ dept.department_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Semester</label>
+                        <select name="semester" class="form-select" required>
+                            {% for s in range(1, 7) %}
+                                <option value="{{ s }}">Semester {{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Section</label>
+                        <input type="text" name="section" class="form-control" value="A" required>
+                    </div>
+                </div>
+
+                <!-- Row 4: Academic Year, Username, Password -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label">Academic Year</label>
+                        <input type="text" name="academic_year" class="form-control" value="2026-2027" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary px-4 fw-bold">
+                    <i class="bi bi-plus-circle"></i> Add Student
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Student List Table Card -->
+    <div class="card card-custom mb-4 overflow-hidden">
+        <div class="card-header bg-success text-white py-2">
+            <h6 class="mb-0 fw-bold">Student List</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3" style="width: 5%;">ID</th>
+                            <th style="width: 20%;">Register No</th>
+                            <th style="width: 20%;">Name</th>
+                            <th style="width: 20%;">Department</th>
+                            <th style="width: 10%;">Semester</th>
+                            <th style="width: 10%;">Username</th>
+                            <th class="text-center" style="width: 15%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if students %}
+                            {% for s in students %}
+                            <tr>
+                                <td class="ps-3 fw-bold">{{ loop.index }}</td>
+                                <td>{{ s.register_number }}</td>
+                                <td class="fw-semibold">{{ s.full_name }}</td>
+                                <td><span class="badge bg-secondary">{{ s.department_name }}</span></td>
+                                <td>{{ s.semester }}</td>
+                                <td>{{ s.username }}</td>
+                                <td class="text-center">
+                                    <div class="d-inline-flex gap-1">
+                                        <a href="{{ url_for('auth.edit_student', student_id=s.student_id) }}" class="btn btn-warning btn-sm text-dark fw-bold">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </a>
+                                        <a href="{{ url_for('auth.delete_student', student_id=s.student_id) }}" 
+                                           class="btn btn-danger btn-sm fw-bold"
+                                           onclick="return confirm('Are you sure you want to delete {{ s.full_name }}? All attendance records will also be permanently removed.');">
+                                            <i class="bi bi-trash-fill"></i> Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">No student records found.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Back -->
+    <a href="{{ url_for('auth.admin_dashboard') }}" class="btn btn-secondary px-3">
+        ← Back to Dashboard
+    </a>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Reports - Smart Attendance System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-custom { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .table thead th { background-color: #1e293b; color: white; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold text-dark mb-1"><i class="bi bi-file-earmark-bar-graph-fill text-primary"></i> Attendance Reports</h3>
+            <p class="text-muted mb-0">Generate and export Daily, Monthly, Date Range, or Full Semester class attendance summaries.</p>
+        </div>
+        <div>
+            {% if session.get('admin_logged_in') %}
+                <a href="{{ url_for('auth.admin_dashboard') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('auth.faculty_dashboard') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Dashboard</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card card-custom p-4 bg-white mb-4">
+        <form method="GET" action="{{ url_for('auth.attendance_reports') }}" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Select Subject</label>
+                <select name="subject_id" class="form-select" required>
+                    <option value="">-- Choose Subject --</option>
+                    {% for sub in subjects %}
+                        <option value="{{ sub.subject_id }}" {% if selected_subject_id == sub.subject_id %}selected{% endif %}>
+                            {{ sub.subject_name }} ({{ sub.subject_code }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Report Type</label>
+                <select name="report_type" id="report_type" class="form-select" onchange="toggleDateInputs()">
+                    <option value="semester" {% if report_type == 'semester' %}selected{% endif %}>Semester Summary</option>
+                    <option value="range" {% if report_type == 'range' %}selected{% endif %}>Specific Date Range</option>
+                    <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>Monthly Report</option>
+                    <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>Daily Report</option>
+                </select>
+            </div>
+
+            <div class="col-md-4" id="daily_input_div" style="display: none;">
+                <label class="form-label fw-bold">Select Date</label>
+                <input type="date" name="specific_date" class="form-control" value="{{ specific_date or '' }}">
+            </div>
+
+            <div class="col-md-4" id="monthly_input_div" style="display: none;">
+                <label class="form-label fw-bold">Select Month</label>
+                <input type="month" name="specific_month" class="form-control" value="{{ specific_month or '' }}">
+            </div>
+
+            <div class="col-md-4" id="range_input_div" style="display: none;">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label fw-bold">From Date</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold">To Date</label>
+                        <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100 fw-bold">Generate</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Data Display & Downloads -->
+    {% if selected_subject %}
+    <div class="card card-custom bg-white overflow-hidden">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark">{{ selected_subject.subject_name }} ({{ selected_subject.subject_code }})</h5>
+                <small class="text-muted">{{ selected_subject.department_name }} | Semester: {{ selected_subject.semester }}</small>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('auth.download_attendance_report', export_format='excel', subject_id=selected_subject_id, report_type=report_type, specific_date=specific_date, specific_month=specific_month, start_date=start_date, end_date=end_date) }}" class="btn btn-success fw-bold btn-sm">
+                    <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+                </a>
+                <a href="{{ url_for('auth.download_attendance_report', export_format='pdf', subject_id=selected_subject_id, report_type=report_type, specific_date=specific_date, specific_month=specific_month, start_date=start_date, end_date=end_date) }}" class="btn btn-danger fw-bold btn-sm">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Register Number</th>
+                            <th>Student Name</th>
+                            <th class="text-center">Total Classes</th>
+                            <th class="text-center">Present Classes</th>
+                            <th class="text-center">Absent Classes</th>
+                            <th class="text-center pe-4">Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if report_rows %}
+                            {% for r in report_rows %}
+                            <tr>
+                                <td class="ps-4 fw-bold">{{ r.register_number }}</td>
+                                <td>{{ r.full_name }}</td>
+                                <td class="text-center">{{ r.total_classes }}</td>
+                                <td class="text-center text-success fw-bold">{{ r.present_classes }}</td>
+                                <td class="text-center text-danger fw-bold">{{ r.absent_classes }}</td>
+                                <td class="text-center pe-4">
+                                    <span class="badge {% if r.percentage >= 75 %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                                        {{ r.percentage }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No attendance logs found for the selected parameters.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleDateInputs() {
+    const type = document.getElementById("report_type").value;
+    document.getElementById("daily_input_div").style.display = (type === "daily") ? "block" : "none";
+    document.getElementById("monthly_input_div").style.display = (type === "monthly") ? "block" : "none";
+    document.getElementById("range_input_div").style.display = (type === "range") ? "block" : "none";
+}
+document.addEventListener("DOMContentLoaded", toggleDateInputs);
+</script>
+</body>
+</html>

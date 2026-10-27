@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Attendance Sessions - Smart Attendance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-custom { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .table thead th { background-color: #212529; color: white; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">
+                <i class="bi bi-clock-history text-primary"></i> Manage Marked Sessions
+            </h3>
+            <p class="text-muted mb-0">
+                <strong>{{ subject.subject_name }}</strong> ({{ subject.subject_code }}) - {{ subject.department_name }} (Sem {{ subject.semester }})
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('auth.mark_attendance', subject_id=subject.subject_id) }}" class="btn btn-primary">
+                <i class="bi bi-pencil-square"></i> Mark New Attendance
+            </a>
+            <a href="{{ url_for('auth.faculty_dashboard') }}" class="btn btn-secondary">
+                ← Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card card-custom overflow-hidden bg-white">
+        <div class="card-header bg-dark text-white py-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-check"></i> Recorded Class Dates & Periods</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4" style="width: 25%;">Date</th>
+                            <th class="text-center" style="width: 15%;">Period</th>
+                            <th class="text-center" style="width: 15%;">Present</th>
+                            <th class="text-center" style="width: 15%;">Absent</th>
+                            <th class="text-center" style="width: 15%;">Total Records</th>
+                            <th class="text-center" style="width: 15%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if sessions_list %}
+                            {% for s in sessions_list %}
+                            <tr>
+                                <td class="ps-4 fw-bold">{{ s.attendance_date }}</td>
+                                <td class="text-center"><span class="badge bg-primary">Period {{ s.period_number or 1 }}</span></td>
+                                <td class="text-center text-success fw-bold">{{ s.present_count }}</td>
+                                <td class="text-center text-danger fw-bold">{{ s.absent_count }}</td>
+                                <td class="text-center fw-semibold">{{ s.total_marked }}</td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="{{ url_for('auth.edit_attendance_session', subject_id=subject.subject_id, date=s.attendance_date, period=s.period_number) }}" 
+                                           class="btn btn-warning btn-sm fw-bold px-2">
+                                            <i class="bi bi-pencil-fill"></i> Edit
+                                        </a>
+                                        <a href="{{ url_for('auth.delete_attendance_by_date', subject_id=subject.subject_id, date=s.attendance_date, period=s.period_number) }}" 
+                                           class="btn btn-danger btn-sm fw-bold px-2"
+                                           onclick="return confirm('Are you sure you want to delete attendance for {{ s.attendance_date }} (Period {{ s.period_number }})?');">
+                                            <i class="bi bi-trash-fill"></i> Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    No attendance records found for this subject.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
