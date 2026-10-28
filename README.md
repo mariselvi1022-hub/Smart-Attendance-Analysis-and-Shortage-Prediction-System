@@ -19,8 +19,9 @@ An academic attendance monitoring and decision-support web application that auto
 - **Services:** OpenRouter API, `ntfy.sh`, SMTP
 - **Report Generation:** ReportLab, pandas, openpyxl
 
-## Setup & Installation
+### Setup & Installation
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/mariselvi1022-hub/Smart-Attendance-Analysis-and-Shortage-Prediction-System.git
-   cd Smart-Attendance-Analysis-and-Shortage-Prediction-System
+```bash
+git clone [https://github.com/mariselvi1022-hub/Smart-Attendance-Analysis-and-Shortage-Prediction-System.git](https://github.com/mariselvi1022-hub/Smart-Attendance-Analysis-and-Shortage-Prediction-System.git)
+cd Smart-Attendance-Analysis-and-Shortage-Prediction-System
+```
